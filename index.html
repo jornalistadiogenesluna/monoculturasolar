@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Quando a usina ocupa mais chão do que a cidade inteira</title>
+  <meta name="description" content="Gráfico interativo que compara a área de complexos solares com a mancha urbana dos municípios.">
+  <style>
+body {
+  width: 100%;
+  background: #ffffff !important;
+  color: #1f1f1f;
+  font-family: "Barlow","Segoe UI",Arial,sans-serif;
+  font-variant-ligatures: normal;
+  text-rendering: optimizeLegibility;
+}
+body .shell,
+body .wrap,
+body .chart-area,
+body #barsView,
+body #scatterView {
+  background: #ffffff !important;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Oswald:wght@500;600;700&display=swap');
+:root{--background:#fff;--foreground:#1f1f1f;--complex:#8a4f32;--urban:#66764a;--muted:#706b63;--border:#ddd7cc;--font-sans:"Barlow","Segoe UI",Arial,sans-serif;--font-display:"Oswald","Arial Narrow",Arial,sans-serif}
+body, body *{box-sizing:border-box}
+body{margin:0;background:#fff!important;color:var(--foreground);font-family:var(--font-sans)}
+.shell{width:100%;height:800px;overflow-y:auto;overflow-x:hidden;background:#fff!important;scrollbar-gutter:stable}
+.wrap{max-width:1024px;margin:0 auto;padding:24px;background:#fff!important}
+body header{border-bottom:2px solid var(--foreground);padding-bottom:16px;background:#fff}
+.kicker{margin:0;font-family:var(--font-display);font-size:.68rem;letter-spacing:.26em;color:var(--complex);text-transform:uppercase}
+body h1{margin:8px 0 0;max-width:760px;font-family:var(--font-display);font-size:clamp(1.5rem,4vw,2rem);line-height:.98;font-weight:700;text-transform:uppercase}
+body h1 span{color:var(--complex)} .deck{max-width:690px;margin:12px 0 0;color:var(--muted);font-size:.875rem;line-height:1.5}
+.controls{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;padding:16px 0;border-bottom:1px solid var(--border);background:#fff}
+.control{min-width:max-content} .control.search{min-width:190px;flex:1}
+.label{margin:0 0 6px;font-size:.65rem;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+.btns{display:flex;flex-wrap:wrap;gap:4px}
+.ctl{position:absolute;opacity:0;pointer-events:none}
+.btn{display:inline-block;border:1px solid var(--border);background:#fff;color:var(--muted);padding:5px 10px;font-family:var(--font-display);font-size:.75rem;cursor:pointer;border-radius:0}
+.btn:hover{border-color:var(--foreground);color:var(--foreground)}
+body input[type=search]{width:100%;height:32px;padding:0;border:0;border-bottom:1px solid var(--border);outline:0;background:#fff;color:var(--foreground)}
+.meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 0;color:var(--muted);font-size:.75rem;background:#fff}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;vertical-align:middle} .legend .c{background:var(--complex)} .legend .u{background:var(--urban);margin-left:16px}
+.chart-area{border-top:1px solid rgba(31,31,31,.15);padding-top:10px;overflow-x:auto;background:#fff!important}
+#barsView{display:flex;flex-direction:column;min-width:720px;background:#fff}
+.rank-row{display:grid;grid-template-columns:minmax(180px,1.15fr) 64px minmax(360px,2fr);gap:10px;align-items:center;min-height:48px;border-bottom:1px solid #eee;background:#fff}
+.rank-name strong{display:block;font-family:var(--font-display);font-size:.86rem;font-weight:600} .rank-name span{display:block;margin-top:2px;color:var(--muted);font-size:.7rem}
+.ratio{font-family:var(--font-display);font-size:.78rem;font-weight:600;color:var(--complex);text-align:right;white-space:nowrap}
+.bars{display:flex;flex-direction:column;gap:5px;min-width:0;background:#fff} .bar-line{display:flex;align-items:center;min-width:0} .bar-track{position:relative;flex:1 1 auto;min-width:0;height:12px;background:#fff}
+.bar{height:12px;min-width:2px} .bar.urban{background:var(--urban)} .bar.complex{background:var(--complex)} .bar-value{flex:0 0 auto;margin-left:6px;color:var(--muted);font-family:var(--font-display);font-size:.72rem;font-weight:600;line-height:12px;white-space:nowrap}
+#scatterView{display:none;width:100%;min-width:720px;background:#fff!important} .grid{stroke:var(--border);stroke-dasharray:2 3} .axis{fill:var(--muted);font-size:10px;font-family:var(--font-sans)} .diagonal{stroke:var(--foreground);stroke-dasharray:4 4;opacity:.4} .point{opacity:.72}
+body footer{margin-top:22px;border-top:1px solid rgba(31,31,31,.15);padding-top:14px;color:var(--muted);font-size:.75rem;line-height:1.5;background:#fff}
+.hidden-search{display:none!important}
+
+/* Estado ativo dos botões */
+#scope-top10:checked~.wrap label[for=scope-top10],
+#scope-all:checked~.wrap label[for=scope-all],
+#uf-ba:checked~.wrap label[for=uf-ba],#uf-ce:checked~.wrap label[for=uf-ce],#uf-pb:checked~.wrap label[for=uf-pb],
+#uf-pe:checked~.wrap label[for=uf-pe],#uf-pi:checked~.wrap label[for=uf-pi],#uf-rn:checked~.wrap label[for=uf-rn],
+#ord-razao:checked~.wrap label[for=ord-razao],#ord-complexo:checked~.wrap label[for=ord-complexo],#ord-urbana:checked~.wrap label[for=ord-urbana],
+#view-barras:checked~.wrap label[for=view-barras],#view-dispersao:checked~.wrap label[for=view-dispersao]
+{background:var(--foreground);color:#fff;border-color:var(--foreground)}
+
+/* Recorte exclusivo: 10 mais, Todos ou uma única UF */
+#scope-top10:checked~.wrap #barsView .rank-row:not(.top10-razao){display:none}
+#scope-top10:checked~#ord-complexo:checked~.wrap #barsView .rank-row{display:grid}
+#scope-top10:checked~#ord-complexo:checked~.wrap #barsView .rank-row:not(.top10-complexo){display:none}
+#scope-top10:checked~#ord-urbana:checked~.wrap #barsView .rank-row{display:grid}
+#scope-top10:checked~#ord-urbana:checked~.wrap #barsView .rank-row:not(.top10-urbana){display:none}
+
+#uf-ba:checked~.wrap .rank-row:not(.uf-BA),#uf-ba:checked~.wrap .point:not(.uf-BA),
+#uf-ce:checked~.wrap .rank-row:not(.uf-CE),#uf-ce:checked~.wrap .point:not(.uf-CE),
+#uf-pb:checked~.wrap .rank-row:not(.uf-PB),#uf-pb:checked~.wrap .point:not(.uf-PB),
+#uf-pe:checked~.wrap .rank-row:not(.uf-PE),#uf-pe:checked~.wrap .point:not(.uf-PE),
+#uf-pi:checked~.wrap .rank-row:not(.uf-PI),#uf-pi:checked~.wrap .point:not(.uf-PI),
+#uf-rn:checked~.wrap .rank-row:not(.uf-RN),#uf-rn:checked~.wrap .point:not(.uf-RN){display:none}
+
+/* Top10 também na dispersão */
+#scope-top10:checked~.wrap #scatterView .point:not(.top10-razao){display:none}
+#scope-top10:checked~#ord-complexo:checked~.wrap #scatterView .point{display:block}
+#scope-top10:checked~#ord-complexo:checked~.wrap #scatterView .point:not(.top10-complexo){display:none}
+#scope-top10:checked~#ord-urbana:checked~.wrap #scatterView .point{display:block}
+#scope-top10:checked~#ord-urbana:checked~.wrap #scatterView .point:not(.top10-urbana){display:none}
+
+/* Ordenação e número do ranking */
+#ord-razao:checked~.wrap .rank-row{order:var(--ord-razao)} #ord-complexo:checked~.wrap .rank-row{order:var(--ord-complexo)} #ord-urbana:checked~.wrap .rank-row{order:var(--ord-urbana)}
+
+
+/* Formato de visualização */
+#view-barras:checked~.wrap #barsView{display:flex}
+#view-barras:checked~.wrap #scatterView{display:none}
+#view-dispersao:checked~.wrap #barsView{display:none}
+#view-dispersao:checked~.wrap #scatterView{display:block}
+
+@media(max-width:700px){.wrap{padding:16px}.rank-row{grid-template-columns:minmax(145px,1fr) 56px minmax(300px,1.6fr);gap:8px}}
+
+.meta-dynamic span{display:none}
+#scope-top10:checked~.wrap .meta-top10{display:inline}
+#scope-all:checked~.wrap .meta-all{display:inline}
+#uf-ba:checked~.wrap .meta-ba{display:inline}
+#uf-ce:checked~.wrap .meta-ce{display:inline}
+#uf-pb:checked~.wrap .meta-pb{display:inline}
+#uf-pe:checked~.wrap .meta-pe{display:inline}
+#uf-pi:checked~.wrap .meta-pi{display:inline}
+#uf-rn:checked~.wrap .meta-rn{display:inline}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <input class="ctl" type="radio" name="recorte" id="scope-top10" checked>
+  <input class="ctl" type="radio" name="recorte" id="scope-all">
+  <input class="ctl" type="radio" name="recorte" id="uf-ba">
+  <input class="ctl" type="radio" name="recorte" id="uf-ce">
+  <input class="ctl" type="radio" name="recorte" id="uf-pb">
+  <input class="ctl" type="radio" name="recorte" id="uf-pe">
+  <input class="ctl" type="radio" name="recorte" id="uf-pi">
+  <input class="ctl" type="radio" name="recorte" id="uf-rn">
+  <input class="ctl" type="radio" name="ord" id="ord-razao" checked>
+  <input class="ctl" type="radio" name="ord" id="ord-complexo">
+  <input class="ctl" type="radio" name="ord" id="ord-urbana">
+  <input class="ctl" type="radio" name="view" id="view-barras" checked>
+  <input class="ctl" type="radio" name="view" id="view-dispersao">
+
+  <div class="wrap">
+    <header>
+      <p class="kicker">Uma nova monocultura nos solos do Nordeste</p>
+      <h1>Quando a usina ocupa <span>mais ch&atilde;o</span> do que a cidade inteira</h1>
+      <p class="deck">Em 27 dos 63 complexos solares mapeados, a &aacute;rea do empreendimento supera toda a mancha urbana do munic&iacute;pio que o abriga.</p>
+    </header>
+
+    <section class="controls">
+      <div class="control">
+        <p class="label">Estado</p>
+        <div class="btns">
+          <label class="btn" for="scope-top10">10 mais</label>
+          <label class="btn" for="scope-all">Todos</label>
+          <label class="btn" for="uf-ba">BA</label><label class="btn" for="uf-ce">CE</label><label class="btn" for="uf-pb">PB</label>
+          <label class="btn" for="uf-pe">PE</label><label class="btn" for="uf-pi">PI</label><label class="btn" for="uf-rn">RN</label>
+        </div>
+      </div>
+      <div class="control">
+        <p class="label">Ordenar por</p>
+        <div class="btns">
+          <label class="btn" for="ord-razao">Raz&atilde;o</label>
+          <label class="btn" for="ord-complexo">&Aacute;rea do complexo</label>
+          <label class="btn" for="ord-urbana">&Aacute;rea urbana</label>
+        </div>
+      </div>
+      <div class="control search"><p class="label">Buscar</p><input id="busca" type="search" placeholder="Munic&iacute;pio ou complexo"></div>
+      <div class="control">
+        <p class="label">Visualiza&ccedil;&atilde;o</p>
+        <div class="btns"><label class="btn" for="view-barras">Barras</label><label class="btn" for="view-dispersao">Dispers&atilde;o</label></div>
+      </div>
+    </section>
+
+    <div class="meta"><div class="legend"><i class="c"></i>&Aacute;rea do complexo<i class="u"></i>Mancha urbana do munic&iacute;pio</div>
+<div class="meta-dynamic">
+  <span class="meta-top10">As 10 mais</span>
+  <span class="meta-all">63 complexos no total</span>
+  <span class="meta-ba">14 complexos em BA.</span>
+  <span class="meta-ce">13 complexos em CE.</span>
+  <span class="meta-pb">6 complexos em PB.</span>
+  <span class="meta-pe">13 complexos em PE.</span>
+  <span class="meta-pi">10 complexos em PI.</span>
+  <span class="meta-rn">7 complexos em RN.</span>
+</div></div>
+    <div class="chart-area">
+      <div id="barsView">
+<div class="rank-row uf-PI top10-razao top10-complexo" data-search="são gonçalo são gonçalo do gurguéia pi"
+ style="--ord-razao:1;--ord-complexo:2;--ord-urbana:61;">
+  <div class="rank-name">
+    <strong>São Gonçalo</strong>
+    <span>São Gonçalo do Gurguéia · PI</span>
+  </div>
+  <div class="ratio">38,7×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.411064%"></div></div>
+      <div class="bar-value">0,48 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:15.904507%"></div></div>
+      <div class="bar-value">18,57 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI top10-razao" data-search="caldeirão grande caldeirão grande pi"
+ style="--ord-razao:2;--ord-complexo:17;--ord-urbana:62;">
+  <div class="rank-name">
+    <strong>Caldeirão Grande</strong>
+    <span>Caldeirão Grande · PI</span>
+  </div>
+  <div class="ratio">12,4×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.368245%"></div></div>
+      <div class="bar-value">0,43 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:4.549746%"></div></div>
+      <div class="bar-value">5,31 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI top10-razao" data-search="nova olinda ribeira do piauí pi"
+ style="--ord-razao:3;--ord-complexo:14;--ord-urbana:59;">
+  <div class="rank-name">
+    <strong>Nova Olinda</strong>
+    <span>Ribeira do Piauí · PI</span>
+  </div>
+  <div class="ratio">6,2×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.856384%"></div></div>
+      <div class="bar-value">1,00 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:5.287330%"></div></div>
+      <div class="bar-value">6,17 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA top10-razao top10-complexo" data-search="sol do sertão oliveira dos brejinhos ba"
+ style="--ord-razao:4;--ord-complexo:9;--ord-urbana:47;">
+  <div class="rank-name">
+    <strong>Sol do Sertão</strong>
+    <span>Oliveira dos Brejinhos · BA</span>
+  </div>
+  <div class="ratio">4,5×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.541492%"></div></div>
+      <div class="bar-value">1,80 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:7.001986%"></div></div>
+      <div class="bar-value">8,18 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN top10-razao top10-complexo" data-search="monte verde pedro avelino;lajes, jandaíra;lajes;jandaíra rn"
+ style="--ord-razao:5;--ord-complexo:10;--ord-urbana:45;">
+  <div class="rank-name">
+    <strong>Monte Verde</strong>
+    <span>Pedro Avelino;Lajes, Jandaíra;Lajes;Jandaíra · RN</span>
+  </div>
+  <div class="ratio">3,7×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.704205%"></div></div>
+      <div class="bar-value">1,99 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:6.327005%"></div></div>
+      <div class="bar-value">7,39 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI top10-razao" data-search="panorama ribeiro gonçalves pi"
+ style="--ord-razao:6;--ord-complexo:16;--ord-urbana:52;">
+  <div class="rank-name">
+    <strong>Panorama</strong>
+    <span>Ribeiro Gonçalves · PI</span>
+  </div>
+  <div class="ratio">3,7×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.293140%"></div></div>
+      <div class="bar-value">1,51 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:4.755028%"></div></div>
+      <div class="bar-value">5,55 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB top10-razao" data-search="santa luzia santa luzia pb"
+ style="--ord-razao:7;--ord-complexo:11;--ord-urbana:41;">
+  <div class="rank-name">
+    <strong>Santa Luzia</strong>
+    <span>Santa Luzia · PB</span>
+  </div>
+  <div class="ratio">3,1×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.969684%"></div></div>
+      <div class="bar-value">2,30 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:6.151903%"></div></div>
+      <div class="bar-value">7,18 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI top10-razao top10-complexo" data-search="marangatu brasileira pi"
+ style="--ord-razao:8;--ord-complexo:7;--ord-urbana:34;">
+  <div class="rank-name">
+    <strong>Marangatu</strong>
+    <span>Brasileira · PI</span>
+  </div>
+  <div class="ratio">3,0×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.843196%"></div></div>
+      <div class="bar-value">3,32 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:8.585161%"></div></div>
+      <div class="bar-value">10,02 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE top10-razao" data-search="panati jaguaretama ce"
+ style="--ord-razao:9;--ord-complexo:18;--ord-urbana:48;">
+  <div class="rank-name">
+    <strong>Panati</strong>
+    <span>Jaguaretama · CE</span>
+  </div>
+  <div class="ratio">2,9×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.507236%"></div></div>
+      <div class="bar-value">1,76 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:4.392741%"></div></div>
+      <div class="bar-value">5,13 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI top10-razao" data-search="ribeiro gonçalves ribeiro gonçalves pi"
+ style="--ord-razao:10;--ord-complexo:21;--ord-urbana:53;">
+  <div class="rank-name">
+    <strong>Ribeiro Gonçalves</strong>
+    <span>Ribeiro Gonçalves · PI</span>
+  </div>
+  <div class="ratio">2,8×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.293140%"></div></div>
+      <div class="bar-value">1,51 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.595356%"></div></div>
+      <div class="bar-value">4,20 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN top10-complexo" data-search="serra do mel serra do mel rn"
+ style="--ord-razao:11;--ord-complexo:5;--ord-urbana:26;">
+  <div class="rank-name">
+    <strong>Serra do Mel</strong>
+    <span>Serra do Mel · RN</span>
+  </div>
+  <div class="ratio">2,4×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.990751%"></div></div>
+      <div class="bar-value">4,66 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:9.680054%"></div></div>
+      <div class="bar-value">11,30 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="sol do agreste tacaimbó;são caitano pe"
+ style="--ord-razao:12;--ord-complexo:32;--ord-urbana:55;">
+  <div class="rank-name">
+    <strong>Sol do Agreste</strong>
+    <span>Tacaimbó;São Caitano · PE</span>
+  </div>
+  <div class="ratio">2,4×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.096172%"></div></div>
+      <div class="bar-value">1,28 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.648035%"></div></div>
+      <div class="bar-value">3,09 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="ituverava tabocas do brejo velho ba"
+ style="--ord-razao:13;--ord-complexo:19;--ord-urbana:43;">
+  <div class="rank-name">
+    <strong>Ituverava</strong>
+    <span>Tabocas do Brejo Velho · BA</span>
+  </div>
+  <div class="ratio">2,3×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.755588%"></div></div>
+      <div class="bar-value">2,05 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:4.053237%"></div></div>
+      <div class="bar-value">4,73 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="luiz gonzaga terra nova pe"
+ style="--ord-razao:14;--ord-complexo:33;--ord-urbana:50;">
+  <div class="rank-name">
+    <strong>Luiz Gonzaga</strong>
+    <span>Terra Nova · PE</span>
+  </div>
+  <div class="ratio">2,0×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.301704%"></div></div>
+      <div class="bar-value">1,52 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.564109%"></div></div>
+      <div class="bar-value">2,99 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN" data-search="dunamis santana do matos rn"
+ style="--ord-razao:15;--ord-complexo:35;--ord-urbana:49;">
+  <div class="rank-name">
+    <strong>Dunamis</strong>
+    <span>Santana do Matos · RN</span>
+  </div>
+  <div class="ratio">1,6×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.404470%"></div></div>
+      <div class="bar-value">1,64 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.255036%"></div></div>
+      <div class="bar-value">2,63 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI" data-search="sol do piauí curral novo do piauí pi"
+ style="--ord-razao:16;--ord-complexo:53;--ord-urbana:60;">
+  <div class="rank-name">
+    <strong>Sol do Piauí</strong>
+    <span>Curral Novo do Piauí · PI</span>
+  </div>
+  <div class="ratio">1,6×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.522394%"></div></div>
+      <div class="bar-value">0,61 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.814547%"></div></div>
+      <div class="bar-value">0,95 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="solar salgueiro terra nova pe"
+ style="--ord-razao:17;--ord-complexo:36;--ord-urbana:51;">
+  <div class="rank-name">
+    <strong>Solar Salgueiro</strong>
+    <span>Terra Nova · PE</span>
+  </div>
+  <div class="ratio">1,5×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.301704%"></div></div>
+      <div class="bar-value">1,52 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.993878%"></div></div>
+      <div class="bar-value">2,33 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="apodi;apodi 2 quixere ce"
+ style="--ord-razao:18;--ord-complexo:23;--ord-urbana:39;">
+  <div class="rank-name">
+    <strong>Apodi;Apodi 2</strong>
+    <span>Quixere · CE</span>
+  </div>
+  <div class="ratio">1,5×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.269419%"></div></div>
+      <div class="bar-value">2,65 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.476085%"></div></div>
+      <div class="bar-value">4,06 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE top10-complexo" data-search="belmonte são josé do belmonte pe"
+ style="--ord-razao:19;--ord-complexo:6;--ord-urbana:18;">
+  <div class="rank-name">
+    <strong>Belmonte</strong>
+    <span>São José do Belmonte · PE</span>
+  </div>
+  <div class="ratio">1,5×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.311553%"></div></div>
+      <div class="bar-value">7,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:9.604964%"></div></div>
+      <div class="bar-value">11,22 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB" data-search="luzia santa luzia pb"
+ style="--ord-razao:20;--ord-complexo:29;--ord-urbana:42;">
+  <div class="rank-name">
+    <strong>Luzia</strong>
+    <span>Santa Luzia · PB</span>
+  </div>
+  <div class="ratio">1,5×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.969684%"></div></div>
+      <div class="bar-value">2,30 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.887827%"></div></div>
+      <div class="bar-value">3,37 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="arapuá jaguaruana ce"
+ style="--ord-razao:21;--ord-complexo:15;--ord-urbana:32;">
+  <div class="rank-name">
+    <strong>Arapuá</strong>
+    <span>Jaguaruana · CE</span>
+  </div>
+  <div class="ratio">1,4×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.468357%"></div></div>
+      <div class="bar-value">4,05 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:4.762898%"></div></div>
+      <div class="bar-value">5,56 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN top10-complexo top10-urbana" data-search="mendubim assu rn"
+ style="--ord-razao:22;--ord-complexo:1;--ord-urbana:8;">
+  <div class="rank-name">
+    <strong>Mendubim</strong>
+    <span>Assu · RN</span>
+  </div>
+  <div class="ratio">1,2×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:13.976193%"></div></div>
+      <div class="bar-value">16,32 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:17.428499%"></div></div>
+      <div class="bar-value">20,35 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="milagres milagres ce"
+ style="--ord-razao:23;--ord-complexo:26;--ord-urbana:35;">
+  <div class="rank-name">
+    <strong>Milagres</strong>
+    <span>Milagres · CE</span>
+  </div>
+  <div class="ratio">1,2×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.740430%"></div></div>
+      <div class="bar-value">3,20 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.186892%"></div></div>
+      <div class="bar-value">3,72 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB" data-search="coremas coremas pb"
+ style="--ord-razao:24;--ord-complexo:25;--ord-urbana:33;">
+  <div class="rank-name">
+    <strong>Coremas</strong>
+    <span>Coremas · PB</span>
+  </div>
+  <div class="ratio">1,1×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.894579%"></div></div>
+      <div class="bar-value">3,38 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.269655%"></div></div>
+      <div class="bar-value">3,82 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="serrita serrita pe"
+ style="--ord-razao:25;--ord-complexo:49;--ord-urbana:56;">
+  <div class="rank-name">
+    <strong>Serrita</strong>
+    <span>Serrita · PE</span>
+  </div>
+  <div class="ratio">1,1×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.984842%"></div></div>
+      <div class="bar-value">1,15 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.061585%"></div></div>
+      <div class="bar-value">1,24 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="horizonte tabocas do brejo velho ba"
+ style="--ord-razao:26;--ord-complexo:37;--ord-urbana:44;">
+  <div class="rank-name">
+    <strong>Horizonte</strong>
+    <span>Tabocas do Brejo Velho · BA</span>
+  </div>
+  <div class="ratio">1,1×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.755588%"></div></div>
+      <div class="bar-value">2,05 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.883607%"></div></div>
+      <div class="bar-value">2,20 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="sol de brotas brotas de macaúbas ba"
+ style="--ord-razao:27;--ord-complexo:45;--ord-urbana:54;">
+  <div class="rank-name">
+    <strong>Sol de Brotas</strong>
+    <span>Brotas de Macaúbas · BA</span>
+  </div>
+  <div class="ratio">1,0×</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.284577%"></div></div>
+      <div class="bar-value">1,50 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.335097%"></div></div>
+      <div class="bar-value">1,56 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="serra da babilônia morro do chapéu ba"
+ style="--ord-razao:28;--ord-complexo:22;--ord-urbana:27;">
+  <div class="rank-name">
+    <strong>Serra da Babilônia</strong>
+    <span>Morro do Chapéu · BA</span>
+  </div>
+  <div class="ratio">94%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.802346%"></div></div>
+      <div class="bar-value">4,44 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.583293%"></div></div>
+      <div class="bar-value">4,18 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI" data-search="etesa são joão do piaui são joão do piaui pi"
+ style="--ord-razao:29;--ord-complexo:24;--ord-urbana:28;">
+  <div class="rank-name">
+    <strong>ETESA São João do Piaui</strong>
+    <span>São João do Piaui · PI</span>
+  </div>
+  <div class="ratio">88%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.785219%"></div></div>
+      <div class="bar-value">4,42 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.336284%"></div></div>
+      <div class="bar-value">3,90 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB" data-search="rio do peixe são joão do rio do peixe pb"
+ style="--ord-razao:30;--ord-complexo:42;--ord-urbana:40;">
+  <div class="rank-name">
+    <strong>Rio do Peixe</strong>
+    <span>São João do Rio do Peixe · PB</span>
+  </div>
+  <div class="ratio">72%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.978248%"></div></div>
+      <div class="bar-value">2,31 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.425611%"></div></div>
+      <div class="bar-value">1,66 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB" data-search="malta malta pb"
+ style="--ord-razao:31;--ord-complexo:56;--ord-urbana:57;">
+  <div class="rank-name">
+    <strong>Malta</strong>
+    <span>Malta · PB</span>
+  </div>
+  <div class="ratio">64%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.907767%"></div></div>
+      <div class="bar-value">1,06 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.584984%"></div></div>
+      <div class="bar-value">0,68 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="solar irecê joão dourado ba"
+ style="--ord-razao:32;--ord-complexo:34;--ord-urbana:30;">
+  <div class="rank-name">
+    <strong>Solar Irecê</strong>
+    <span>João Dourado · BA</span>
+  </div>
+  <div class="ratio">63%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.682453%"></div></div>
+      <div class="bar-value">4,30 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.324672%"></div></div>
+      <div class="bar-value">2,71 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="são pedro e paulo flores pe"
+ style="--ord-razao:33;--ord-complexo:44;--ord-urbana:37;">
+  <div class="rank-name">
+    <strong>São Pedro e Paulo</strong>
+    <span>Flores · PE</span>
+  </div>
+  <div class="ratio">59%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.337929%"></div></div>
+      <div class="bar-value">2,73 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.370811%"></div></div>
+      <div class="bar-value">1,60 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN top10-complexo top10-urbana" data-search="assú sol assú rn"
+ style="--ord-razao:34;--ord-complexo:8;--ord-urbana:9;">
+  <div class="rank-name">
+    <strong>Assú Sol</strong>
+    <span>Assú · RN</span>
+  </div>
+  <div class="ratio">58%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:13.976193%"></div></div>
+      <div class="bar-value">16,32 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:8.145878%"></div></div>
+      <div class="bar-value">9,51 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="alex limoeiro do norte, tabuleiro do norte ce"
+ style="--ord-razao:35;--ord-complexo:12;--ord-urbana:15;">
+  <div class="rank-name">
+    <strong>Alex</strong>
+    <span>Limoeiro do Norte, Tabuleiro do Norte · CE</span>
+  </div>
+  <div class="ratio">58%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:10.422197%"></div></div>
+      <div class="bar-value">12,17 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:5.997596%"></div></div>
+      <div class="bar-value">7,00 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="assurá itaguaçu da bahia ba"
+ style="--ord-razao:36;--ord-complexo:54;--ord-urbana:46;">
+  <div class="rank-name">
+    <strong>Assurá</strong>
+    <span>Itaguaçu da Bahia · BA</span>
+  </div>
+  <div class="ratio">51%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:1.550056%"></div></div>
+      <div class="bar-value">1,81 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.790438%"></div></div>
+      <div class="bar-value">0,92 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PB" data-search="angico malta pb"
+ style="--ord-razao:37;--ord-complexo:59;--ord-urbana:58;">
+  <div class="rank-name">
+    <strong>Angico</strong>
+    <span>Malta · PB</span>
+  </div>
+  <div class="ratio">46%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.907767%"></div></div>
+      <div class="bar-value">1,06 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.418090%"></div></div>
+      <div class="bar-value">0,49 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="ciranda são josé do belmonte pe"
+ style="--ord-razao:38;--ord-complexo:31;--ord-urbana:19;">
+  <div class="rank-name">
+    <strong>Ciranda</strong>
+    <span>São José do Belmonte · PE</span>
+  </div>
+  <div class="ratio">42%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.311553%"></div></div>
+      <div class="bar-value">7,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.658309%"></div></div>
+      <div class="bar-value">3,10 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="bom jardim icó ce"
+ style="--ord-razao:39;--ord-complexo:27;--ord-urbana:16;">
+  <div class="rank-name">
+    <strong>Bom Jardim</strong>
+    <span>Icó · CE</span>
+  </div>
+  <div class="ratio">42%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:7.030915%"></div></div>
+      <div class="bar-value">8,21 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.954059%"></div></div>
+      <div class="bar-value">3,45 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN" data-search="floresta areia branca rn"
+ style="--ord-razao:40;--ord-complexo:39;--ord-urbana:24;">
+  <div class="rank-name">
+    <strong>Floresta</strong>
+    <span>Areia Branca · RN</span>
+  </div>
+  <div class="ratio">38%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:4.778625%"></div></div>
+      <div class="bar-value">5,58 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.800779%"></div></div>
+      <div class="bar-value">2,10 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA top10-complexo top10-urbana" data-search="futura juazeiro ba"
+ style="--ord-razao:41;--ord-complexo:3;--ord-urbana:2;">
+  <div class="rank-name">
+    <strong>Futura</strong>
+    <span>Juazeiro · BA</span>
+  </div>
+  <div class="ratio">37%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:36.422026%"></div></div>
+      <div class="bar-value">42,53 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:13.455109%"></div></div>
+      <div class="bar-value">15,71 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="maravilhas pedras de fogo pe"
+ style="--ord-razao:42;--ord-complexo:51;--ord-urbana:36;">
+  <div class="rank-name">
+    <strong>Maravilhas</strong>
+    <span>Pedras de Fogo · PE</span>
+  </div>
+  <div class="ratio">33%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.706175%"></div></div>
+      <div class="bar-value">3,16 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.898156%"></div></div>
+      <div class="bar-value">1,05 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="serra do mato trairi ce"
+ style="--ord-razao:43;--ord-complexo:40;--ord-urbana:23;">
+  <div class="rank-name">
+    <strong>Serra do Mato</strong>
+    <span>Trairi · CE</span>
+  </div>
+  <div class="ratio">33%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:5.275328%"></div></div>
+      <div class="bar-value">6,16 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.746554%"></div></div>
+      <div class="bar-value">2,04 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA top10-complexo top10-urbana" data-search="sertão solar barreiras ba"
+ style="--ord-razao:44;--ord-complexo:4;--ord-urbana:4;">
+  <div class="rank-name">
+    <strong>Sertão Solar</strong>
+    <span>Barreiras · BA</span>
+  </div>
+  <div class="ratio">33%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:31.857498%"></div></div>
+      <div class="bar-value">37,20 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:10.385610%"></div></div>
+      <div class="bar-value">12,13 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="bom nome são josé do belmonte pe"
+ style="--ord-razao:45;--ord-complexo:38;--ord-urbana:20;">
+  <div class="rank-name">
+    <strong>Bom Nome</strong>
+    <span>São José do Belmonte · PE</span>
+  </div>
+  <div class="ratio">29%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.311553%"></div></div>
+      <div class="bar-value">7,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.815973%"></div></div>
+      <div class="bar-value">2,12 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="xaxado são josé do belmonte pe"
+ style="--ord-razao:46;--ord-complexo:41;--ord-urbana:21;">
+  <div class="rank-name">
+    <strong>Xaxado</strong>
+    <span>São José do Belmonte · PE</span>
+  </div>
+  <div class="ratio">26%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.311553%"></div></div>
+      <div class="bar-value">7,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.667377%"></div></div>
+      <div class="bar-value">1,95 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="lagoinha russas ce"
+ style="--ord-razao:47;--ord-complexo:30;--ord-urbana:13;">
+  <div class="rank-name">
+    <strong>Lagoinha</strong>
+    <span>Russas · CE</span>
+  </div>
+  <div class="ratio">22%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:12.314807%"></div></div>
+      <div class="bar-value">14,38 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.706534%"></div></div>
+      <div class="bar-value">3,16 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI" data-search="sertão joão costa pi"
+ style="--ord-razao:48;--ord-complexo:61;--ord-urbana:63;">
+  <div class="rank-name">
+    <strong>Sertão</strong>
+    <span>João Costa · PI</span>
+  </div>
+  <div class="ratio">22%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:0.351118%"></div></div>
+      <div class="bar-value">0,41 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.075839%"></div></div>
+      <div class="bar-value">0,09 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="mauriti mauriti ce"
+ style="--ord-razao:49;--ord-complexo:55;--ord-urbana:31;">
+  <div class="rank-name">
+    <strong>Mauriti</strong>
+    <span>Mauriti · CE</span>
+  </div>
+  <div class="ratio">20%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.519740%"></div></div>
+      <div class="bar-value">4,11 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.700062%"></div></div>
+      <div class="bar-value">0,82 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="brígida são josé do belmonte pe"
+ style="--ord-razao:50;--ord-complexo:47;--ord-urbana:22;">
+  <div class="rank-name">
+    <strong>Brígida</strong>
+    <span>São José do Belmonte · PE</span>
+  </div>
+  <div class="ratio">18%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.311553%"></div></div>
+      <div class="bar-value">7,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.124395%"></div></div>
+      <div class="bar-value">1,31 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA top10-urbana" data-search="juazeiro juazeiro ba"
+ style="--ord-razao:51;--ord-complexo:13;--ord-urbana:3;">
+  <div class="rank-name">
+    <strong>Juazeiro</strong>
+    <span>Juazeiro · BA</span>
+  </div>
+  <div class="ratio">16%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:36.422026%"></div></div>
+      <div class="bar-value">42,53 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:5.993554%"></div></div>
+      <div class="bar-value">7,00 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="solar sobrado casa nova ba"
+ style="--ord-razao:52;--ord-complexo:52;--ord-urbana:17;">
+  <div class="rank-name">
+    <strong>Solar Sobrado</strong>
+    <span>Casa Nova · BA</span>
+  </div>
+  <div class="ratio">13%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:6.885330%"></div></div>
+      <div class="bar-value">8,04 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.895295%"></div></div>
+      <div class="bar-value">1,05 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE top10-urbana" data-search="lins são gonçalo do amarante ce"
+ style="--ord-razao:53;--ord-complexo:28;--ord-urbana:5;">
+  <div class="rank-name">
+    <strong>Lins</strong>
+    <span>São Gonçalo do Amarante · CE</span>
+  </div>
+  <div class="ratio">13%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:22.942537%"></div></div>
+      <div class="bar-value">26,79 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:2.906350%"></div></div>
+      <div class="bar-value">3,39 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="fazenda esmeralda agrestina pe"
+ style="--ord-razao:54;--ord-complexo:57;--ord-urbana:25;">
+  <div class="rank-name">
+    <strong>Fazenda Esmeralda</strong>
+    <span>Agrestina · PE</span>
+  </div>
+  <div class="ratio">11%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:4.598784%"></div></div>
+      <div class="bar-value">5,37 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.525650%"></div></div>
+      <div class="bar-value">0,61 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE" data-search="pitombeira aracati ce"
+ style="--ord-razao:55;--ord-complexo:48;--ord-urbana:14;">
+  <div class="rank-name">
+    <strong>Pitombeira</strong>
+    <span>Aracati · CE</span>
+  </div>
+  <div class="ratio">10%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:10.619166%"></div></div>
+      <div class="bar-value">12,40 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.108592%"></div></div>
+      <div class="bar-value">1,29 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="são pedro bom jesus da lapa ba"
+ style="--ord-razao:56;--ord-complexo:46;--ord-urbana:11;">
+  <div class="rank-name">
+    <strong>São Pedro</strong>
+    <span>Bom Jesus da Lapa · BA</span>
+  </div>
+  <div class="ratio">9%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:13.941937%"></div></div>
+      <div class="bar-value">16,28 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.282966%"></div></div>
+      <div class="bar-value">1,50 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE top10-urbana" data-search="sol do futuro aquiraz ce"
+ style="--ord-razao:57;--ord-complexo:43;--ord-urbana:7;">
+  <div class="rank-name">
+    <strong>Sol do Futuro</strong>
+    <span>Aquiraz · CE</span>
+  </div>
+  <div class="ratio">8%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:18.446519%"></div></div>
+      <div class="bar-value">21,54 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:1.385537%"></div></div>
+      <div class="bar-value">1,62 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-RN top10-urbana" data-search="assú assú rn"
+ style="--ord-razao:58;--ord-complexo:50;--ord-urbana:10;">
+  <div class="rank-name">
+    <strong>Assú</strong>
+    <span>Assú · RN</span>
+  </div>
+  <div class="ratio">7%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:13.976193%"></div></div>
+      <div class="bar-value">16,32 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.953590%"></div></div>
+      <div class="bar-value">1,11 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-CE top10-urbana" data-search="lavras calcaia ce"
+ style="--ord-razao:59;--ord-complexo:20;--ord-urbana:1;">
+  <div class="rank-name">
+    <strong>Lavras</strong>
+    <span>Calcaia · CE</span>
+  </div>
+  <div class="ratio">4%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:100.000000%"></div></div>
+      <div class="bar-value">116,77 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:3.876068%"></div></div>
+      <div class="bar-value">4,53 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA" data-search="bom jesus da lapa bom jesus da lapa ba"
+ style="--ord-razao:60;--ord-complexo:60;--ord-urbana:12;">
+  <div class="rank-name">
+    <strong>Bom Jesus da Lapa</strong>
+    <span>Bom Jesus da Lapa · BA</span>
+  </div>
+  <div class="ratio">3%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:13.941937%"></div></div>
+      <div class="bar-value">16,28 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.362870%"></div></div>
+      <div class="bar-value">0,42 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-BA top10-urbana" data-search="verde vale guanambi ba"
+ style="--ord-razao:61;--ord-complexo:58;--ord-urbana:6;">
+  <div class="rank-name">
+    <strong>Verde Vale</strong>
+    <span>Guanambi · BA</span>
+  </div>
+  <div class="ratio">2%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:21.332534%"></div></div>
+      <div class="bar-value">24,91 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.424871%"></div></div>
+      <div class="bar-value">0,50 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PI" data-search="sobral são joão do piaui pi"
+ style="--ord-razao:62;--ord-complexo:62;--ord-urbana:29;">
+  <div class="rank-name">
+    <strong>Sobral</strong>
+    <span>São João do Piaui · PI</span>
+  </div>
+  <div class="ratio">2%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:3.785219%"></div></div>
+      <div class="bar-value">4,42 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.071768%"></div></div>
+      <div class="bar-value">0,08 km²</div>
+    </div>
+  </div>
+</div>
+<div class="rank-row uf-PE" data-search="pajeú flores pe"
+ style="--ord-razao:63;--ord-complexo:63;--ord-urbana:38;">
+  <div class="rank-name">
+    <strong>Pajeú</strong>
+    <span>Flores · PE</span>
+  </div>
+  <div class="ratio">0%</div>
+  <div class="bars">
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar urban" style="width:2.337929%"></div></div>
+      <div class="bar-value">2,73 km²</div>
+    </div>
+    <div class="bar-line">
+      <div class="bar-track"><div class="bar complex" style="width:0.002864%"></div></div>
+      <div class="bar-value">0,00 km²</div>
+    </div>
+  </div>
+</div></div>
+      <svg id="scatterView" viewBox="0 0 960 540"><line x1="64.000" y1="20" x2="64.000" y2="482" class="grid"/><line x1="64" y1="482.000" x2="932" y2="482.000" class="grid"/><text x="64.000" y="505" class="axis" text-anchor="middle">0</text><text x="56" y="485.000" class="axis" text-anchor="end">0</text><line x1="237.600" y1="20" x2="237.600" y2="482" class="grid"/><line x1="64" y1="389.600" x2="932" y2="389.600" class="grid"/><text x="237.600" y="505" class="axis" text-anchor="middle">26</text><text x="56" y="392.600" class="axis" text-anchor="end">4</text><line x1="411.200" y1="20" x2="411.200" y2="482" class="grid"/><line x1="64" y1="297.200" x2="932" y2="297.200" class="grid"/><text x="411.200" y="505" class="axis" text-anchor="middle">51</text><text x="56" y="300.200" class="axis" text-anchor="end">9</text><line x1="584.800" y1="20" x2="584.800" y2="482" class="grid"/><line x1="64" y1="204.800" x2="932" y2="204.800" class="grid"/><text x="584.800" y="505" class="axis" text-anchor="middle">77</text><text x="56" y="207.800" class="axis" text-anchor="end">13</text><line x1="758.400" y1="20" x2="758.400" y2="482" class="grid"/><line x1="64" y1="112.400" x2="932" y2="112.400" class="grid"/><text x="758.400" y="505" class="axis" text-anchor="middle">103</text><text x="56" y="115.400" class="axis" text-anchor="end">18</text><line x1="932.000" y1="20" x2="932.000" y2="482" class="grid"/><line x1="64" y1="20.000" x2="932" y2="20.000" class="grid"/><text x="932.000" y="505" class="axis" text-anchor="middle">128</text><text x="56" y="23.000" class="axis" text-anchor="end">22</text><line x1="64.000" y1="482.000" x2="215.279" y2="20.000" class="diagonal"/><circle class="uf-PI point top10-razao top10-complexo" cx="67.244" cy="98.726" r="6" fill="var(--complex)"></circle><circle class="uf-PI point top10-razao" cx="66.906" cy="372.358" r="6" fill="var(--complex)"></circle><circle class="uf-PI point top10-razao" cx="70.758" cy="354.583" r="6" fill="var(--complex)"></circle><circle class="uf-BA point top10-razao top10-complexo" cx="76.164" cy="313.263" r="6" fill="var(--complex)"></circle><circle class="uf-RN point top10-razao top10-complexo" cx="77.448" cy="329.529" r="6" fill="var(--complex)"></circle><circle class="uf-PI point top10-razao" cx="74.204" cy="367.411" r="6" fill="var(--complex)"></circle><circle class="uf-PB point top10-razao" cx="79.543" cy="333.749" r="6" fill="var(--complex)"></circle><circle class="uf-PI point top10-razao top10-complexo" cx="86.435" cy="275.111" r="6" fill="var(--complex)"></circle><circle class="uf-CE point top10-razao" cx="75.893" cy="376.142" r="6" fill="var(--complex)"></circle><circle class="uf-PI point top10-razao" cx="74.204" cy="395.357" r="6" fill="var(--complex)"></circle><circle class="uf-RN point top10-complexo" cx="95.491" cy="248.726" r="6" fill="var(--complex)"></circle><circle class="uf-PE point" cx="72.650" cy="418.186" r="6" fill="var(--complex)"></circle><circle class="uf-BA point" cx="77.853" cy="384.323" r="6" fill="var(--complex)"></circle><circle class="uf-PE point" cx="74.272" cy="420.209" r="6" fill="var(--complex)"></circle><circle class="uf-RN point" cx="75.083" cy="427.657" r="6" fill="var(--complex)"></circle><circle class="uf-PI point" cx="68.122" cy="462.371" r="6" fill="var(--complex)"></circle><circle class="uf-PE point" cx="74.272" cy="433.951" r="6" fill="var(--complex)"></circle><circle class="uf-CE point" cx="81.908" cy="398.232" r="6" fill="var(--complex)"></circle><circle class="uf-PE point top10-complexo" cx="113.804" cy="250.535" r="6" fill="var(--complex)"></circle><circle class="uf-PB point" cx="79.543" cy="412.408" r="6" fill="var(--complex)"></circle><circle class="uf-CE point" cx="91.368" cy="367.222" r="6" fill="var(--complex)"></circle><circle class="uf-RN point top10-complexo top10-urbana" cx="174.285" cy="62.000" r="6" fill="var(--complex)"></circle><circle class="uf-CE point" cx="85.624" cy="405.201" r="6" fill="var(--complex)"></circle><circle class="uf-PB point" cx="86.841" cy="403.206" r="6" fill="var(--complex)"></circle><circle class="uf-PE point" cx="71.771" cy="456.417" r="6" fill="var(--complex)"></circle><circle class="uf-BA point" cx="77.853" cy="436.608" r="6" fill="var(--complex)"></circle><circle class="uf-BA point" cx="74.136" cy="449.826" r="6" fill="var(--complex)"></circle><circle class="uf-BA point" cx="94.004" cy="395.648" r="6" fill="var(--urban)"></circle><circle class="uf-PI point" cx="93.869" cy="401.601" r="6" fill="var(--urban)"></circle><circle class="uf-PB point" cx="79.610" cy="447.645" r="6" fill="var(--urban)"></circle><circle class="uf-PB point" cx="71.163" cy="467.903" r="6" fill="var(--urban)"></circle><circle class="uf-BA point" cx="93.058" cy="425.979" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="82.448" cy="448.966" r="6" fill="var(--urban)"></circle><circle class="uf-RN point top10-complexo top10-urbana" cx="174.285" cy="285.697" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="146.241" cy="337.467" r="6" fill="var(--urban)"></circle><circle class="uf-BA point" cx="76.231" cy="462.952" r="6" fill="var(--urban)"></circle><circle class="uf-PB point" cx="71.163" cy="471.925" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="113.804" cy="417.939" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="119.480" cy="410.812" r="6" fill="var(--urban)"></circle><circle class="uf-RN point" cx="101.708" cy="438.604" r="6" fill="var(--urban)"></circle><circle class="uf-BA point top10-complexo top10-urbana" cx="351.403" cy="157.753" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="85.354" cy="460.356" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="105.627" cy="439.911" r="6" fill="var(--urban)"></circle><circle class="uf-BA point top10-complexo top10-urbana" cx="315.385" cy="231.723" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="113.804" cy="438.238" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="113.804" cy="441.819" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="161.175" cy="416.777" r="6" fill="var(--urban)"></circle><circle class="uf-PI point" cx="66.771" cy="480.172" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="91.774" cy="465.130" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="113.804" cy="454.904" r="6" fill="var(--urban)"></circle><circle class="uf-BA point top10-urbana" cx="351.403" cy="337.565" r="6" fill="var(--urban)"></circle><circle class="uf-BA point" cx="118.332" cy="460.425" r="6" fill="var(--urban)"></circle><circle class="uf-CE point top10-urbana" cx="245.037" cy="411.961" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="100.289" cy="469.333" r="6" fill="var(--urban)"></circle><circle class="uf-CE point" cx="147.795" cy="455.285" r="6" fill="var(--urban)"></circle><circle class="uf-BA point" cx="174.015" cy="451.082" r="6" fill="var(--urban)"></circle><circle class="uf-CE point top10-urbana" cx="209.560" cy="448.611" r="6" fill="var(--urban)"></circle><circle class="uf-RN point top10-urbana" cx="174.285" cy="459.020" r="6" fill="var(--urban)"></circle><circle class="uf-CE point top10-urbana" cx="853.091" cy="388.593" r="6" fill="var(--urban)"></circle><circle class="uf-BA point" cx="174.015" cy="473.255" r="6" fill="var(--urban)"></circle><circle class="uf-BA point top10-urbana" cx="232.333" cy="471.761" r="6" fill="var(--urban)"></circle><circle class="uf-PI point" cx="93.869" cy="480.271" r="6" fill="var(--urban)"></circle><circle class="uf-PE point" cx="82.448" cy="481.931" r="6" fill="var(--urban)"></circle></svg>
+    </div>
+    <footer>Na dispersão, cada bolha é um complexo: quanto mais acima da linha tracejada, mais o empreendimento supera a cidade. Rótulos “×” indicam quantas vezes o complexo é maior que a mancha urbana.</footer>
+  </div>
+</div>
+<script>
+(function(){
+  var busca=document.querySelector('#monocultura-solar-elementor #busca');
+  if(!busca) return;
+
+  busca.addEventListener('input',function(){
+    var q=this.value.trim().toLowerCase();
+    document.querySelectorAll('#monocultura-solar-elementor .rank-row').forEach(function(row){
+      row.classList.toggle('hidden-search', q && !row.dataset.search.includes(q));
+    });
+  });
+})();
+
+
+(function() {
+  var metaText = document.getElementById('metaText');
+  if (!metaText) return;
+
+  var counts = {
+    BA: 14,
+    CE: 13,
+    PB: 6,
+    PE: 13,
+    PI: 10,
+    RN: 7
+  };
+
+  function setText(mode, uf) {
+    if (mode === 'top10') {
+      metaText.textContent = 'As 10 mais';
+      return;
+    }
+
+    if (mode === 'all') {
+      metaText.textContent = '63 complexos no total';
+      return;
+    }
+
+    if (mode === 'uf' && uf) {
+      metaText.textContent = counts[uf] + ' complexos em ' + uf + '.';
+    }
+  }
+
+  function syncFromChecked() {
+    var top10 = document.getElementById('scope-top10');
+    var all = document.getElementById('scope-all');
+
+    if (top10 && top10.checked) {
+      setText('top10');
+      return;
+    }
+
+    if (all && all.checked) {
+      setText('all');
+      return;
+    }
+
+    var ufIds = {
+      'uf-ba': 'BA',
+      'uf-ce': 'CE',
+      'uf-pb': 'PB',
+      'uf-pe': 'PE',
+      'uf-pi': 'PI',
+      'uf-rn': 'RN'
+    };
+
+    Object.keys(ufIds).some(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.checked) {
+        setText('uf', ufIds[id]);
+        return true;
+      }
+      return false;
+    });
+  }
+
+  var top10Label = document.querySelector('label[for="scope-top10"]');
+  var allLabel = document.querySelector('label[for="scope-all"]');
+
+  if (top10Label) {
+    top10Label.addEventListener('click', function() {
+      setText('top10');
+    });
+  }
+
+  if (allLabel) {
+    allLabel.addEventListener('click', function() {
+      setText('all');
+    });
+  }
+
+  var ufLabels = {
+    'uf-ba': 'BA',
+    'uf-ce': 'CE',
+    'uf-pb': 'PB',
+    'uf-pe': 'PE',
+    'uf-pi': 'PI',
+    'uf-rn': 'RN'
+  };
+
+  Object.keys(ufLabels).forEach(function(id) {
+    var label = document.querySelector('label[for="' + id + '"]');
+    if (label) {
+      label.addEventListener('click', function() {
+        setText('uf', ufLabels[id]);
+      });
+    }
+  });
+
+  document.querySelectorAll('input[name="recorte"]').forEach(function(input) {
+    input.addEventListener('change', syncFromChecked);
+  });
+
+  syncFromChecked();
+})();
+</script>
+</body>
+</html>
